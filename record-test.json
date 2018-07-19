@@ -1,0 +1,29 @@
+[
+     {
+          "hovaten": "Nguyễn Văn A",
+          "namsinh": "1920",
+          "nammat": "1960",
+          "quequan": "TPHCM",
+          "khu": "B1",
+          "hang": "2",
+          "mo": "3"
+     },
+     {
+          "hovaten": "Nguyễn Văn B",
+          "namsinh": "1921",
+          "nammat": "1961",
+          "quequan": "Đồng Tháp",
+          "khu": "C1",
+          "hang": "7",
+          "mo": "8"
+     },
+     {
+          "hovaten": "Nguyễn Văn C",
+          "namsinh": "1922",
+          "nammat": "1962",
+          "quequan": "Hà Nội",
+          "khu": "B4",
+          "hang": "6",
+          "mo": "5"
+     }
+]
