@@ -1,13 +1,17 @@
 const express = require("express");
 const bodyParser = require("body-parser")
 const knex = require("knex")
-// app.use(express.static("puclic"));
-// app.set("view engine", 	"html");
-// app.set("views", "./views")
-//app.use(bodyParser.json());
 const app = express();
-app.listen(8888);
+//app.use(express.static("puclic"));
+app.set("view engine", 	"ejs");
+app.set("views", "./views")
+app.use(express.static(__dirname + '/public'));
+//app.use(bodyParser.json());
 
+//app.listen(8888);
+
+
+// query: express-engiate
 const db = knex({
 	client: 'pg',
   	connection: {
@@ -18,23 +22,28 @@ const db = knex({
     database : 'anhhunglietsi'
   }
 });
-// var knex = require('knex')({
-//   client: 'pg',
-//   //version: '7.2',
-//   connection: {
-//     host : '127.0.0.1',
-//     user : 'admin',
-//     password : 'admin',
-//     database : 'anhhunglietsi'
-//   }
-// });
 
 
-//const db = knex()
-app.get('/', (req, res) => {
-	res.send("hello")
-	
-});
+
+app.get("/print/:id", function(req, res){
+
+	var i = req.params.id;
+	//res.render('printing', {hoten:});
+	console.log(i)
+	db.select('*').from('anhhunglietsi').where('id', i)
+	.then(result => {
+			
+			//console.log(lietsi.hovaten)
+			console.log(result[0].hovaten)
+			res.render('printing',{result:result[0]} )
+
+	})
+	.catch(err => res.status(400).json('Wrong credentials'))
+
+
+
+})
+
 
 // function replaceAt(string, index, replace) {
 //   return string.substring(0, index) + replace + string.substring(index + 1);
@@ -65,8 +74,8 @@ app.get('/timkiem', function(req, res) {
 		hang: req.query.hang,
 		mo: req.query.mo
 
-
 	}
+
 
 	console.log(req.query)
 
@@ -91,7 +100,7 @@ app.get('/timkiem', function(req, res) {
 	// Req tìm thông tin cá nhân liet si
 	if(req.query.loai == 'thongtin') {
 
-	// Truy vấn: Nếu có nhập dữ liệu mơi thực hiện truy vấn
+	// Truy vấn: Nếu có nhập dữ liệu mơi thực hiện truy vấn     .count('id as totalpage')
 		var queryStr = db.select('*').from('anhhunglietsi').where(function(){
 			if (lietsi.hovaten != ''){
 				this.where('hovaten', 'like' , '%' + lietsi.hoten)
@@ -110,7 +119,7 @@ app.get('/timkiem', function(req, res) {
 				this.where('quequan', lietsi.quequan)
 			}					
 		})
-		.limit(50)
+		.limit(200)
 		// OderBy
 		if(lietsi.hoten != '' && lietsi.namsinh == ''){
 			queryStr.orderBy('namsinh', 'asc');
@@ -118,9 +127,11 @@ app.get('/timkiem', function(req, res) {
 			queryStr.orderBy('hovaten', 'asc');
 		} 
 
+		console.log(queryStr.toString())
+
 		queryStr.then(result => {
 			res.send(JSON.stringify(result))
-			console.log(result)		
+	
 
 		})
 		.catch(err => res.status(400).json('Wrong credentials'))
@@ -140,17 +151,50 @@ app.get('/timkiem', function(req, res) {
 				this.where('mo', lietsi.mo)
 			}
 		})
-		.limit(50)
+		.limit(200)
 		.orderBy('hovaten', 'desc')
 		.then(result => {
 			res.send(JSON.stringify(result));
-			console.log(result)		
+			//console.log(result)		
 		})
 		.catch(err => res.status(400).json('Wrong credentials'))
 	}
 	
 	
 });
+
+//-----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+app.listen(8888);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
