@@ -21,7 +21,7 @@ const db = knex({
     password : 'admin',
     database : 'anhhunglietsi'
   }
-});
+});	
 
 
 
@@ -64,7 +64,8 @@ app.get("/print/:id", function(req, res){
 
 app.get('/timkiem', function(req, res) {
 	//console.log(req.body)
-
+	 res.setHeader('Content-Type', 'application/json');
+ 	 res.setHeader('Access-Control-Allow-Origin', '*');
 	const lietsi = {
 		hoten: req.query.hovaten,
 		namsinh: req.query.namsinh,
