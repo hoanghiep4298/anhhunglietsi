@@ -21,8 +21,57 @@ const db = knex({
     password : 'admin',
     database : 'anhhunglietsi'
   }
-});	
+});
 
+
+function change_alias(alias) {
+	
+    var str = alias;
+    str = str.toLowerCase();
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a"); 
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g,"e"); 
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g,"i"); 
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g,"o"); 
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g,"u"); 
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g,"y"); 
+    str = str.replace(/đ/g,"d");
+    str = str.replace(/!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g," ");
+    str = str.replace(/ + /g," ");
+    str = str.trim(); 
+    str = str.toUpperCase();
+	
+    return str;
+}
+
+function compare(a, b){
+	var ten_a = a.hovaten.split(' ').slice(-1).join(' ');
+	var ten_b = b.hovaten.split(' ').slice(-1).join(' ');
+
+	if (ten_a < ten_b) {
+		return -1;
+	}
+	if (ten_a > ten_b) {
+		return 1;
+	}
+	return 0;
+}
+
+function pushUnloop(arrObj1, arrObj2){
+	var arrObj = arrObj1;
+	for (var i in arrObj2){
+		var flag = true;
+		for (var j in arrObj1){
+			if(arrObj2[i].id == arrObj1[j].id){
+				flag = false;
+				break;
+			}
+		}
+		if (flag == true) {
+			arrObj.push(arrObj2[i])
+		}
+	}
+	return arrObj;
+}
 
 
 app.get("/print/:id", function(req, res){
@@ -39,7 +88,6 @@ app.get("/print/:id", function(req, res){
 
 	})
 	.catch(err => res.status(400).json('Wrong credentials'))
-
 
 
 })
@@ -62,10 +110,13 @@ app.get("/print/:id", function(req, res){
 //   return result;
 // }
 
+
+
 app.get('/timkiem', function(req, res) {
 	//console.log(req.body)
-	 res.setHeader('Content-Type', 'application/json');
- 	 res.setHeader('Access-Control-Allow-Origin', '*');
+	res.setHeader('Content-Type', 'application/json');
+	res.setHeader('Access-Control-Allow-Origin','*')
+
 	const lietsi = {
 		hoten: req.query.hovaten,
 		namsinh: req.query.namsinh,
@@ -78,7 +129,7 @@ app.get('/timkiem', function(req, res) {
 	}
 
 
-	console.log(req.query)
+	//console.log(req.query)
 
 
 	if (lietsi.hoten != '') {
@@ -100,15 +151,22 @@ app.get('/timkiem', function(req, res) {
 	
 	// Req tìm thông tin cá nhân liet si
 	if(req.query.loai == 'thongtin') {
+		
+		// Query lần 1 lấy 200 kết quả chính xác nhất
+		var tenkhongdau;
+		var qqkhongdau;
 
-	// Truy vấn: Nếu có nhập dữ liệu mơi thực hiện truy vấn     .count('id as totalpage')
-		var queryStr = db.select('*').from('anhhunglietsi').where(function(){
-			if (lietsi.hovaten != ''){
-				this.where('hovaten', 'like' , '%' + lietsi.hoten)
-			}	
+
+		var queryStr = db.select('id', 'hovaten', 'quequan', 'lo', 'hang', 'mo', 'donvi', 'chucvu', 'namsinh', 'nammat').from('anhhunglietsi').where(function(){
+		if (lietsi.hoten != ''){
+			tenkhongdau = change_alias(lietsi.hoten)
+			
+			this.where('hotenkhongdau', 'like' , '%' + tenkhongdau)
+		}	
 		}).andWhere( function(){
 			if (lietsi.nammat != ''){
-				this.where('nammat' , '%'+lietsi.nammat+'%')
+				
+				this.where('nammat' , 'like', '%'+lietsi.nammat+'%')
 			}
 		}).andWhere(function() {
 			if (lietsi.namsinh != ''){
@@ -117,60 +175,88 @@ app.get('/timkiem', function(req, res) {
 					
 		}).andWhere(function() {
 			if(lietsi.quequan != ''){
-				this.where('quequan', lietsi.quequan)
+				qqkhongdau = change_alias(lietsi.quequan)
+				this.where('quequankhongdau', 'like', '%'+qqkhongdau+'%')
 			}					
 		})
 		.limit(200)
-		// OderBy
-		if(lietsi.hoten != '' && lietsi.namsinh == ''){
-			queryStr.orderBy('namsinh', 'asc');
-		} else {
-			queryStr.orderBy('hovaten', 'asc');
-		} 
-
-		console.log(queryStr.toString())
+		//console.log(queryStr.toString())
 
 		queryStr.then(result => {
-			res.send(JSON.stringify(result))
-	
+			// LỒNG: query lần 2 lấy cách kết quả liên quan
 
+			var queryStr2 = db.select('id','hovaten', 'quequan', 'lo', 'hang', 'mo', 'donvi', 'chucvu', 'namsinh', 'nammat').from('anhhunglietsi').where(function(){
+			if (lietsi.hoten != ''){			
+				this.where('hotenkhongdau', 'like' , '%' + tenkhongdau + '%')
+			}	
+			}).andWhere( function(){
+				if (lietsi.nammat != ''){
+					this.where('nammat' , 'like', '%' +lietsi.nammat+'%')
+				}
+			}).andWhere(function() {
+				if (lietsi.namsinh != ''){
+					this.where('namsinh', lietsi.namsinh)
+				}
+						
+			}).andWhere(function() {
+				if(lietsi.quequan != ''){
+				
+				this.where('quequankhongdau', 'like', '%'+qqkhongdau+'%')
+			}					
+			})
+			.limit(800)
+		
+			//console.log(queryStr2.toString())
+			queryStr2.then(result2 => {
+				
+
+				var result1 = result.sort(compare);
+				var main_result = pushUnloop(result1, result2);
+
+				res.send(JSON.stringify(main_result))
+
+			})
+		.catch(err => res.status(400).json('ERROR2'))
+			
+			
 		})
-		.catch(err => res.status(400).json('Wrong credentials'))
+		.catch(err => res.status(400).json('ERROR1'))
+		
+		//TIM KIEM TUONG DOI--------------------------------------
+
+		
+
 	} 
 	//Req tìm thông tin vị trí mộ
 	else if (req.query.loai == 'vitri') {
-		db.select('*').from('anhhunglietsi').where(function() {
+		var queryStr = db.select('id','hovaten', 'quequan', 'lo', 'hang', 'mo', 'donvi', 'chucvu', 'namsinh', 'nammat').from('anhhunglietsi').where(function() {
 			if (lietsi.lo != ''){
 				this.where('lo', lietsi.lo)
 			}
 		}).andWhere(function() {
 			if (lietsi.hang != ''){
-				this.where('hang', lietsi.hang)
+				this.where('hang', 'like', '_'+ lietsi.hang)
 			}
 		}).andWhere(function() {
 			if (lietsi.mo != ''){
-				this.where('mo', lietsi.mo)
+				this.where('mo', 'like', '_' + lietsi.mo)
 			}
 		})
-		.limit(200)
+		.limit(500)
 		.orderBy('hovaten', 'desc')
-		.then(result => {
+		//console.log(queryStr.toString())
+
+		queryStr.then(result => {
 			res.send(JSON.stringify(result));
-			//console.log(result)		
+					
 		})
-		.catch(err => res.status(400).json('Wrong credentials'))
+		.catch(err => res.status(400).json('ERROR'))
 	}
 	
 	
 });
 
 //-----------------------------------------------------------------------
-
-
-
-
-
-
 
 
 app.listen(8888);
