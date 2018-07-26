@@ -15,11 +15,8 @@ app.use(express.static(__dirname + '/public'));
 const db = knex({
 	client: 'pg',
   	connection: {
-    host : '127.0.0.1',
-    port: 5000,
-    user : 'postgres',
-    password : 'admin',
-    database : 'anhhunglietsi'
+	    connectionString:process.env.DATABASE_URL,
+	    ssl:true,
   }
 });
 
@@ -113,7 +110,7 @@ app.get("/print/:id", function(req, res){
 
 
 app.get('/timkiem', function(req, res) {
-	//console.log(req.body)
+	console.log(req.body)
 	res.setHeader('Content-Type', 'application/json');
 	res.setHeader('Access-Control-Allow-Origin','*')
 
@@ -129,7 +126,7 @@ app.get('/timkiem', function(req, res) {
 	}
 
 
-	//console.log(req.query)
+	console.log(req.query)
 
 
 	if (lietsi.hoten != '') {
@@ -180,7 +177,7 @@ app.get('/timkiem', function(req, res) {
 			}					
 		})
 		.limit(200)
-		//console.log(queryStr.toString())
+		console.log(queryStr.toString())
 
 		queryStr.then(result => {
 			// LỒNG: query lần 2 lấy cách kết quả liên quan
@@ -206,7 +203,7 @@ app.get('/timkiem', function(req, res) {
 			})
 			.limit(800)
 		
-			//console.log(queryStr2.toString())
+			console.log(queryStr2.toString())
 			queryStr2.then(result2 => {
 				
 
@@ -244,7 +241,7 @@ app.get('/timkiem', function(req, res) {
 		})
 		.limit(500)
 		.orderBy('hovaten', 'desc')
-		//console.log(queryStr.toString())
+		console.log(queryStr.toString())
 
 		queryStr.then(result => {
 			res.send(JSON.stringify(result));
@@ -259,7 +256,7 @@ app.get('/timkiem', function(req, res) {
 //-----------------------------------------------------------------------
 
 
-app.listen(8888);
+app.listen(process.env.PORT||8888);
 
 
 
